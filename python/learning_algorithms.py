@@ -26,7 +26,9 @@ class PGTrainer:
             self.update_policy(loss)
             # TODO: Calculate avg reward for this rollout
             # HINT: Add all the rewards from each trajectory. There should be "ntr" trajectories within a single rollout.
-            avg_ro_reward = ???
+            #avg_ro_reward = ???
+            # TODO: this is not quite right...
+            avg_ro_reward = sum( x for x in trajectory['reward'] ) / self.params['n_trajectory_per_rollout']
             print(f'End of rollout {ro_idx}: Average trajectory reward is {avg_ro_reward: 0.2f}')
             # Append average rollout reward into a list
             list_ro_reward.append(avg_ro_reward)
@@ -74,7 +76,8 @@ class PGPolicy(nn.Module):
         super(PGPolicy, self).__init__()
         # TODO: Define the policy net
         # HINT: You can use nn.Sequential to set up a 2 layer feedforward neural network.
-        self.policy_net = ???
+        #self.policy_net = ???
+        self.policy_net = nn.Sequential(nn.Linear(input_size, hidden_dim),nn.Linear(hidden_dim, output_size))
 
     def forward(self, obs):
         # TODO: Forward pass of policy net
@@ -97,9 +100,11 @@ class Agent:
             trajectory_buffer = {'log_prob': list(), 'reward': list()}
             while True:
                 # TODO: Get action from the policy (forward pass of policy net)
-                action_idx, log_prob = ???
+                #action_idx, log_prob = ???
+                action_idx, log_prob = policy.forward(obs)
                 # TODO: Step environment (use self.env.step() function)
-                obs, reward, terminated, truncated, info = ???
+                #obs, reward, terminated, truncated, info = ???
+                obs, reward, terminated, truncated, info = self.env.step(self.action_space[action_idx.item()])
                 # Save log-prob and reward into the buffer
                 trajectory_buffer['log_prob'].append(log_prob)
                 trajectory_buffer['reward'].append(reward)
