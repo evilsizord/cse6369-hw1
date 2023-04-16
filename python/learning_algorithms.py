@@ -31,7 +31,7 @@ class PGTrainer:
             for t in range(len(trajectory['reward'])):
                 avg_ro_reward = avg_ro_reward + np.sum(r for r in trajectory['reward'][t])
             avg_ro_reward = avg_ro_reward / self.params['n_trajectory_per_rollout']
-            
+
             print(f'End of rollout {ro_idx}: Average trajectory reward is {avg_ro_reward: 0.2f}')
             # Append average rollout reward into a list
             list_ro_reward.append(avg_ro_reward)
@@ -51,9 +51,9 @@ class PGTrainer:
             # TODO: Compute loss function
             # HINT 1: You should implement eq 6, 7 and 8 here. Which will be used based on the flags set from the main function
             trajectory_logprobs = trajectory['log_prob'][t_idx]
-            returns = apply_return(trajectory['rewards'][t_idx])
-            rtgs = apply_reward_to_go(trajectory['rewards'][t_idx])
-            discounted_rewards = apply_discount(trajectory['rewards'][t_idx])
+            returns = apply_return(trajectory['reward'][t_idx])
+            rtgs = apply_reward_to_go(trajectory['reward'][t_idx])
+            discounted_rewards = apply_discount(trajectory['reward'][t_idx])
 
             ert = 0  # expected reward for the trajectory
             #loop over T timesteps
@@ -110,7 +110,7 @@ class PGPolicy(nn.Module):
         # HINT: (use Categorical from torch.distributions to draw samples and log-prob from model output)
         #???
         #ref: https://pytorch.org/docs/stable/distributions.html
-        y_pred = self.policy_net(obs)
+        y_pred = self.policy_net(torch.tensor(obs, dtype=torch.float32, device=get_device()))
         m = Categorical(y_pred)
         action_index = m.sample()
         log_prob = m.log_prob(action_index)
