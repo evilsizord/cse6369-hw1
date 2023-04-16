@@ -43,15 +43,36 @@ class PGTrainer:
 
     def estimate_loss_function(self, trajectory):
         loss = list()
+        # loop over k trajectories
         for t_idx in range(self.params['n_trajectory_per_rollout']):
             # TODO: Compute loss function
             # HINT 1: You should implement eq 6, 7 and 8 here. Which will be used based on the flags set from the main function
-            ???
+            trajectory_logprobs = trajectory['log_prob'][t_idx]
+
+            ert = 0  # expected reward for the trajectory
+            #loop over T timesteps
+            for t in range(len(trajectory_logprobs) - 1):
+                t_value = ert + trajectory_logprobs[t]
+
+                if self.params['reward_to_go']:
+                    t_value = t_value * apply_reward_to_go(trajectory['rewards'][t_idx][t:])
+                elif self.params['reward_discount']:
+                    t_value = t_value * apply_discount(trajectory['rewards'][t_idx][t:])
+
+                ert = ert + t_value
+
+
+            if not(self.params['reward_to_go']) and not(self.params['reward_discount']):
+                ert = ert * apply_return(trajectory['rewards'][t_idx])
+
             # HINT 2: Get trajectory action log-prob
-            ???
+            #???
+
             # HINT 3: Calculate Loss function and append to the list
-            ???
-        loss = torch.stack(loss).mean()
+            #???
+            loss.append( ert )
+
+        loss = -1 * torch.stack(loss).mean()
         return loss
 
     def update_policy(self, loss):
@@ -82,7 +103,12 @@ class PGPolicy(nn.Module):
     def forward(self, obs):
         # TODO: Forward pass of policy net
         # HINT: (use Categorical from torch.distributions to draw samples and log-prob from model output)
-        ???
+        #???
+        #ref: https://pytorch.org/docs/stable/distributions.html
+        y_pred = self.policy_net(obs)
+        m = Categorical(y_pred)
+        action_index = m.sample()
+        log_prob = m.log_prob(action_index)
         return action_index, log_prob
 
 

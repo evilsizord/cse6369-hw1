@@ -19,7 +19,14 @@ def get_device():
 def apply_reward_to_go(raw_reward):
     # TODO: Compute rtg_reward (as a list) from raw_reward
     # HINT: Reverse the input list, keep a running-average. Reverse again to get the correct order.
-    rtg_reward = ???
+    #rtg_reward = [np.sum(raw_reward) for _ in raw_reward]
+    raw_reward.reverse()
+    rtg_reward = list()
+    total = 0
+    for r in range(len(raw_reward)):
+        total = total + raw_reward[r]
+        rtg_reward.append(total)
+    rtg_reward.reverse()
     # Normalization
     rtg_reward = np.array(rtg_reward)
     rtg_reward = rtg_reward - np.mean(rtg_reward) / (np.std(rtg_reward) + np.finfo(np.float32).eps)
@@ -30,7 +37,14 @@ def apply_reward_to_go(raw_reward):
 def apply_discount(raw_reward, gamma=0.99):
     # TODO: Compute discounted_rtg_reward (as a list) from raw_reward
     # HINT: Reverse the input list, keep a running-average. Reverse again to get the correct order.
-    discounted_rtg_reward = ???
+    #discounted_rtg_reward = ???
+    raw_reward.reverse()
+    discounted_rtg_reward = list()
+    total = 0
+    for r in range(len(raw_reward)):
+        total = total + (gamma**r * raw_reward[r])
+        discounted_rtg_reward.append(total)
+    discounted_rtg_reward.reverse()
     # Normalization
     discounted_rtg_reward = np.array(discounted_rtg_reward)
     discounted_rtg_reward = discounted_rtg_reward - np.mean(discounted_rtg_reward) / (np.std(discounted_rtg_reward) + np.finfo(np.float32).eps)
