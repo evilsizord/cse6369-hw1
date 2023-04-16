@@ -27,8 +27,11 @@ class PGTrainer:
             # TODO: Calculate avg reward for this rollout
             # HINT: Add all the rewards from each trajectory. There should be "ntr" trajectories within a single rollout.
             #avg_ro_reward = ???
-            # TODO: this is not quite right...
-            avg_ro_reward = sum( x for x in trajectory['reward'] ) / self.params['n_trajectory_per_rollout']
+            avg_ro_reward = 0
+            for t in range(len(trajectory['reward'])):
+                avg_ro_reward = avg_ro_reward + np.sum(r for r in trajectory['reward'][t])
+            avg_ro_reward = avg_ro_reward / self.params['n_trajectory_per_rollout']
+            
             print(f'End of rollout {ro_idx}: Average trajectory reward is {avg_ro_reward: 0.2f}')
             # Append average rollout reward into a list
             list_ro_reward.append(avg_ro_reward)
@@ -48,6 +51,9 @@ class PGTrainer:
             # TODO: Compute loss function
             # HINT 1: You should implement eq 6, 7 and 8 here. Which will be used based on the flags set from the main function
             trajectory_logprobs = trajectory['log_prob'][t_idx]
+            returns = apply_return(trajectory['rewards'][t_idx])
+            rtgs = apply_reward_to_go(trajectory['rewards'][t_idx])
+            discounted_rewards = apply_discount(trajectory['rewards'][t_idx])
 
             ert = 0  # expected reward for the trajectory
             #loop over T timesteps
@@ -55,15 +61,14 @@ class PGTrainer:
                 t_value = ert + trajectory_logprobs[t]
 
                 if self.params['reward_to_go']:
-                    t_value = t_value * apply_reward_to_go(trajectory['rewards'][t_idx][t:])
+                    t_value = t_value * rtgs[t]
                 elif self.params['reward_discount']:
-                    t_value = t_value * apply_discount(trajectory['rewards'][t_idx][t:])
+                    t_value = t_value * discounted_rewards[t]
 
                 ert = ert + t_value
 
-
             if not(self.params['reward_to_go']) and not(self.params['reward_discount']):
-                ert = ert * apply_return(trajectory['rewards'][t_idx])
+                ert = ert * returns[0]
 
             # HINT 2: Get trajectory action log-prob
             #???
