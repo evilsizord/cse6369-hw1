@@ -58,7 +58,7 @@ class PGTrainer:
             ert = 0  # expected reward for the trajectory
             #loop over T timesteps
             for t in range(len(trajectory_logprobs) - 1):
-                t_value = ert + trajectory_logprobs[t]
+                t_value = trajectory_logprobs[t]
 
                 if self.params['reward_to_go']:
                     t_value = t_value * rtgs[t]
@@ -70,14 +70,10 @@ class PGTrainer:
             if not(self.params['reward_to_go']) and not(self.params['reward_discount']):
                 ert = ert * returns[0]
 
-            # HINT 2: Get trajectory action log-prob
-            #???
+            loss.append( -1 * ert )
 
-            # HINT 3: Calculate Loss function and append to the list
-            #???
-            loss.append( ert )
-
-        loss = -1 * torch.stack(loss).mean()
+        loss = torch.stack(loss).mean()
+        #print('Loss:', loss)
         return loss
 
     def update_policy(self, loss):
@@ -103,15 +99,15 @@ class PGPolicy(nn.Module):
         # TODO: Define the policy net
         # HINT: You can use nn.Sequential to set up a 2 layer feedforward neural network.
         #self.policy_net = ???
-        self.policy_net = nn.Sequential(nn.Linear(input_size, hidden_dim),nn.Linear(hidden_dim, output_size))
+        self.policy_net = nn.Sequential(nn.Linear(input_size, hidden_dim), nn.Linear(hidden_dim, output_size))
 
     def forward(self, obs):
         # TODO: Forward pass of policy net
         # HINT: (use Categorical from torch.distributions to draw samples and log-prob from model output)
         #???
         #ref: https://pytorch.org/docs/stable/distributions.html
-        y_pred = self.policy_net(torch.tensor(obs, dtype=torch.float32, device=get_device()))
-        m = Categorical(y_pred)
+        y_pred = self.policy_net(obs)
+        m = Categorical(logits=y_pred)
         action_index = m.sample()
         log_prob = m.log_prob(action_index)
         return action_index, log_prob
@@ -132,7 +128,7 @@ class Agent:
             while True:
                 # TODO: Get action from the policy (forward pass of policy net)
                 #action_idx, log_prob = ???
-                action_idx, log_prob = policy.forward(obs)
+                action_idx, log_prob = policy.forward(torch.tensor(obs, dtype=torch.float32, device=get_device()))
                 # TODO: Step environment (use self.env.step() function)
                 #obs, reward, terminated, truncated, info = ???
                 obs, reward, terminated, truncated, info = self.env.step(self.action_space[action_idx.item()])
